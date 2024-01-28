@@ -6,6 +6,7 @@ from tqdm import tqdm
 import imageio  # 用来获取视频时长
 import torch
 import threading
+from queue import Queue
 
 device = torch.device('cuda', 0)
 
@@ -46,18 +47,13 @@ def seconds_to_hmsm(seconds):
     return f"{hours}:{minutes}:{seconds},{milliseconds}"
 
 
-def model_transcribe(model, file, verbose, language, q):
+def model_transcribe(model, file, verbose, language, save_file):
     start_transcribe = datetime.datetime.now()
     res = model.transcribe(file, fp16=False, verbose=True, language='Chinese')
     end_transcribe = datetime.datetime.now()
     print('AI花費時間:', end_transcribe - start_transcribe)
-    q.put(data)
-
-
-def write_str(save_file,q):
     start_write = datetime.datetime.now()
     # 写入字幕文件
-    res = q.get()
     with open(save_file, 'w', encoding='utf-8') as f:
         print("# 写入字幕文件")
         i = 1
@@ -71,12 +67,14 @@ def write_str(save_file,q):
     end_write = datetime.datetime.now()
     print('寫入字幕花費時間:', end_write - start_write)
 
+
 def main():
     # 主文件夹
     # file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\演算法 Algorithms  交大 電機工程學系 江蕙如老師'
-    file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\計算機組織\2022年 講義+影片\2022年影片'
-    # mp4_files = find_files(file_path, suffix='mp4')
-    mp4_files = find_files(file_path, suffix='wmv')
+    # file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\計算機組織\2022年 講義+影片\2022年影片'
+    file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\其他影片'
+    mp4_files = find_files(file_path, suffix='mp4')
+    # mp4_files = find_files(file_path, suffix='wmv')
 
     # 获取模型
     model = whisper.load_model('medium', device=device)
@@ -105,13 +103,9 @@ def main():
         # 文字识别
         # model_transcribe(model, file, verbose=True, language='Chinese')
         transcribe_threading = threading.Thread(
-            target=model_transcribe(model, file, verbose=True, language='Chinese', q=q)) 
-        write_str = threading.Thread(target=write_str(save_file=save_file,q=q))   
-
+            target=model_transcribe(model, file, verbose=True, language='Chinese', save_file=save_file)) 
         transcribe_threading.start()
         transcribe_threading.join()
-        write_str.start()
-        write_str.join()
         # res = model.transcribe(file, fp16=False, verbose=True, language='Chinese')
         # 获取当前视频识别结束时间
         end_time = datetime.datetime.now()
