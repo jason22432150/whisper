@@ -6,7 +6,6 @@ from tqdm import tqdm
 import imageio  # 用来获取视频时长
 import torch
 import threading
-from queue import Queue
 
 device = torch.device('cuda', 0)
 
@@ -70,16 +69,15 @@ def model_transcribe(model, file, verbose, language, save_file):
 
 def main():
     # 主文件夹
-    # file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\演算法 Algorithms  交大 電機工程學系 江蕙如老師'
-    # file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\計算機組織\2022年 講義+影片\2022年影片'
-    file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\其他影片'
-    mp4_files = find_files(file_path, suffix='mp4')
-    # mp4_files = find_files(file_path, suffix='wmv')
+    # file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\線性代數'
+    file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\計算機組織\2022年 講義+影片\2022年影片'
+    # file_path = r'\\DESKTOP-0NFCVV5\nas\資工研究所\其他影片'
+    # mp4_files = find_files(file_path, suffix='mp4')
+    mp4_files = find_files(file_path, suffix='wmv')
+    # mp4_files = find_files(file_path, suffix='mkv')
 
     # 获取模型
     model = whisper.load_model('medium', device=device)
-
-    q = Queue()
 
     for file in tqdm(mp4_files):
         print("\n")
@@ -103,7 +101,7 @@ def main():
         # 文字识别
         # model_transcribe(model, file, verbose=True, language='Chinese')
         transcribe_threading = threading.Thread(
-            target=model_transcribe(model, file, verbose=True, language='Chinese', save_file=save_file)) 
+            target=model_transcribe(model, file, verbose=True, language='Chinese', save_file=save_file))
         transcribe_threading.start()
         transcribe_threading.join()
         # res = model.transcribe(file, fp16=False, verbose=True, language='Chinese')
